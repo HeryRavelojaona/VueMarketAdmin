@@ -50,18 +50,13 @@ export default {
             .then((res) => res.data)
             .then((res) => this.products = Object.values(res))
             .catch(error => console.log(error));
+
+        
     },
   
 }
 </script>
 <style lang="scss" scoped>
 
-$background : grey;
-.product-item{
-  background-color: $background;
-  width: 60%;
-  margin: 30px auto;
-  padding: 20px;
-  border-radius: 3px;
-}
+
 </style>

@@ -1,12 +1,10 @@
 <template>
-  <div class="admin-product">
+  <div class="admin-product" v-bind:class="[ empty ? 'empty-model' : '']">
     <h3>{{ productItem.title }}</h3>
-                <div class="col-xs-12 admin-actions">
-                    <a @click.prevent="liked(productItem.id, productItem.liked)" :id="productItem.id" :class="{ liked : productItem.liked == true }" class="btn admin-btn btn-light" title="favori"><i class="fas fa-heart"></i></a>
-                    <a :href="getUpdateUrl(productItem.id)" class="btn admin-btn btn-warning" title="Modifier produit de base">Modifier le produit <i class="fas fa-exchange-alt"></i></a>
-                    <router-link :to="{ name: 'managemodel', params: { id : productItem.id, productname : productItem.title }}" class="btn admin-btn btn-primary">Gestion des modèles</router-link>
-                    
-
+                <div class="admin-actions">
+                    <a @click.prevent="liked(productItem.id, productItem.liked)" :id="productItem.id" :class="{ liked : productItem.liked == true }" class="admin-btn button is-danger" title="favori"><i class="fas fa-heart"></i></a>
+                    <a :href="getUpdateUrl(productItem.id)" class="admin-btn button is-warning" title="Modifier produit de base">Modifier le produit  <i class="fas fa-exchange-alt"> </i></a>
+                    <router-link :to="{ name: 'managemodel', params: { id : productItem.id, productname : productItem.title }}" class=" admin-btn button is-info">Gestion des modèles</router-link>
                     <button class="is-primary admin-btn check-delete" @click="isActive = !isActive" title="Supprimer"><i class="fas fa-trash-alt" ></i></button>
                     <div class="control-delete" v-if="isActive" >
                         <form action="index.php?route=deleteproduct" method="POST" class="delete-form" >
@@ -33,12 +31,30 @@ export default {
   },
   data(){
     return{
-      showActions: false,
-            isActive: false,
-            message: ''
+        showActions: false,
+        isActive: false,
+        message: '',
+        models : [],
+        empty: false
     }
   },
-  methods: {
+  async mounted(){
+      await axios.get('http://localhost/lesbricoles/public/index.php?route=api/productmodel&productId=' + this.productItem.id + '')
+            .then((res) => res.data)
+            .then((res) => this.models = Object.values(res));
+
+            //If no stock item background-color is red
+            setTimeout(()=>{
+                this.models.forEach(model=>{
+                    if(model.stock == 0) {
+                        this.empty = true
+                    }
+                })
+            }) 
+    },
+
+        
+    methods: {
       getModel(id) {
           return "index.php?route=addmodel&productId=" + id + ""
       },
@@ -77,8 +93,8 @@ export default {
           let formData = new FormData();
           formData.append('id', id);
           formData.append('liked', newLike);
-          await axios.post('index.php?route=getlike', formData)
-              .then((res) => console.log('Liked'))
+          await axios.post('http://localhost/lesbricoles/public/index.php?route=getlike', formData)
+              .then((res) => console.log(res))
               .then(() => {
                   axios.get('index.php?route=api/products')
                       .then((res) => res.data)
@@ -91,4 +107,34 @@ export default {
   },
 }
 </script>
+<style lang="scss" scoped>
 
+/*Var*/
+$grey : #ddd;
+$emptyModel : red;
+
+.admin-product{
+  background-color: $grey;
+  width: 60%;
+  margin: 30px auto;
+  padding: 20px;
+  border-radius: 3px;
+  .admin-actions {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+        a {
+            margin: 10px 0;
+        }
+        .fa-exchange-alt,
+        .stop-delete {
+            margin: 0 0 0 5px;
+        }
+    }
+}
+
+.admin-product.empty-model{
+    background-color: $emptyModel;
+}   
+
+</style>
